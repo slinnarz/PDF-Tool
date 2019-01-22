@@ -2,10 +2,12 @@
 
 '''
 TO DOs:
-    - Finish GUI layout
-    - Convert MS Office docs to PDF.   
+    - Finish GUI layout.
+    - Convert MS Office docs to PDF.
+    - Merge PDFs.
+    - Clean (and shorten) the code.
 IN PROGRESS:    
-    - Add buttons:
+    - Merge PDFs, working on function. Next step is adding it to the GUI.
 
 '''
 
@@ -15,7 +17,7 @@ IN PROGRESS:
 
 import os
 from appJar import gui
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
 
 
 #############################
@@ -29,13 +31,14 @@ def list_files(dataType):
     Lists all files of specified type in the current folder.
     Takes data type as string (e.g. '.pdf') as argument.
     '''
-    files = os.listdir('.\\')
+    files = os.listdir('.\\Test files')
     return [file for file in files if file.endswith(dataType)]
 
-def add_pageBookmarks(pdfFiles):
+def add_pageBookmarks(pdfFiles, inFolder):
     '''
     Adds bookmarks for page numbers, if the document has >1 pages.
-    Takes a list of PDF-files as an argument.
+    Takes a list of PDF-files as an argument as well as a filepath to the
+    input folder (str).
     '''
     if os.path.exists(exportFolder) == False:
         os.makedirs(exportFolder)
@@ -44,7 +47,7 @@ def add_pageBookmarks(pdfFiles):
         pdfWriter = PdfFileWriter()
         
         # open PDF-file
-        inputFile = open(file, 'rb')
+        inputFile = open(inFolder + "\\" + file, 'rb')
         myPDF = PdfFileReader(inputFile, strict=False)
         
         # if file has >1 pages, add page bookmarks
@@ -70,7 +73,7 @@ def del_allFiles(folder):
     except:
         print("PDF-Export folder is empty or doesn't exist.")
         
-def del_allBookmarks(pdfList):
+def del_allBookmarks(pdfList, inFolder):
     '''
     Deletes all bookmarks of selected PDFs by copying page contents and
     overwriting "old" PDF-files.
@@ -81,7 +84,7 @@ def del_allBookmarks(pdfList):
         pdfWriter = PdfFileWriter()
         
         # open PDF-file
-        inputFile = open(file, 'rb')
+        inputFile = open(inFolder + "\\" + file, 'rb')
         myPDF = PdfFileReader(inputFile, strict=False)
         
         # "copy" pages
@@ -93,7 +96,27 @@ def del_allBookmarks(pdfList):
         with open(outputFile, 'wb') as resultPDF:
             pdfWriter.write(resultPDF)
     
-    
+def merge_PDFs(pdfList):
+    '''
+    Merges selected input PDFs to one output PDF.
+    '''
+    for file in pdfList:
+        # open PdfFileMerger
+        pdfMerger = PdfFileMerger()
+        
+        # open PDF-file
+        inputFile = open(inFolder + "\\" + file, 'rb')
+        myPDF = PdfFileReader(inputFile, strict=False)
+        
+        # merge PDF-files
+        pdfMerger.append(myPDF)
+        
+    # produce output PDF
+    outputFile = '.\\dummyfile'
+    with open(outputFile, 'wb') as resultPDF:
+        pdfMerger.write(resultPDF)    
+     
+     
 ### APP FUNCTIONS
 
 def btn_GetList():
@@ -115,7 +138,7 @@ def btn_addBookmarks():
     Create button to add page booksmarks to PDFs in ListBox.
     '''
     pdfList = app.getListBox("list")
-    add_pageBookmarks(pdfList)
+    add_pageBookmarks(pdfList, inFolder)
     
 def btn_delExportFolder(folder):
     '''
@@ -128,7 +151,7 @@ def btn_delBookmarks():
     Deletes all bookmarks of the selected PDFs in ListBox.
     '''
     pdfList = app.getListBox("list")
-    del_allBookmarks(pdfList)
+    del_allBookmarks(pdfList, inFolder)
 
 #########################
 ##### START PROGRAM #####
@@ -137,12 +160,15 @@ def btn_delBookmarks():
 # set subfolder to store/edit new PDF files
 exportFolder = ".\\PDF-Export"
 
+# set folder with input files, created for test purposes
+inFolder = ".\\Test files"
+
 # create a GUI variable
 app = gui(showIcon=False)
 
 # add & configure widgets
-app.addLabel("listBox1", "Files in folder:", row = 0, colspan = 2)
-app.addLabel("listBox2", os.path.basename(os.getcwd()), row = 1, colspan = 2)
+app.addLabel("listBox1", "Files in folder:", 0, 0)
+app.addLabel("listBox2", os.path.basename(os.getcwd()) + inFolder, 0, 1)
 app.addListBox("list", [], row = 2, colspan = 2)
 app.setListBoxMulti("list", multi=True)
 

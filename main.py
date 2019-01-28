@@ -4,11 +4,9 @@
 TO DOs:
     - Finish GUI layout.
     - Convert MS Office docs to PDF.
-    - Merge PDFs.
     - Clean (and shorten) the code.
 IN PROGRESS:    
-    - Merge PDFs, working on function. Next step is adding it to the GUI.
-
+    - 
 '''
 
 ############################
@@ -45,17 +43,14 @@ def add_pageBookmarks(pdfFiles, inFolder):
     for file in pdfFiles:
         # open PdfFileWriter
         pdfWriter = PdfFileWriter()
-        
         # open PDF-file
         inputFile = open(inFolder + "\\" + file, 'rb')
         myPDF = PdfFileReader(inputFile, strict=False)
-        
         # if file has >1 pages, add page bookmarks
         if myPDF.numPages > 1:
             for page in range(0, myPDF.numPages):
                 pdfWriter.addPage(myPDF.getPage(page))
                 pdfWriter.addBookmark('{}'.format(page+1), page, parent=None)
-        
             # write PDF-file
             outputFile = exportFolder + "\\" + file#[:len(file)-4] + '_neu.pdf'
             with open(outputFile, 'wb') as resultPDF:
@@ -82,37 +77,34 @@ def del_allBookmarks(pdfList, inFolder):
     for file in pdfList:
         # open PdfFileWriter
         pdfWriter = PdfFileWriter()
-        
         # open PDF-file
         inputFile = open(inFolder + "\\" + file, 'rb')
         myPDF = PdfFileReader(inputFile, strict=False)
-        
         # "copy" pages
         for page in range(0, myPDF.numPages):
             pdfWriter.addPage(myPDF.getPage(page))
-            
         # saving file
         outputFile = exportFolder + "\\" + file
         with open(outputFile, 'wb') as resultPDF:
             pdfWriter.write(resultPDF)
     
-def merge_PDFs(pdfList):
+def merge_PDFs(pdfList, inFolder):
     '''
     Merges selected input PDFs to one output PDF.
     '''
+    # create export folder if it doesn't exist
+    if os.path.exists(exportFolder) == False:
+        os.makedirs(exportFolder)
+    # open PdfFileMerger    
+    pdfMerger = PdfFileMerger(strict=False)
     for file in pdfList:
-        # open PdfFileMerger
-        pdfMerger = PdfFileMerger()
-        
         # open PDF-file
         inputFile = open(inFolder + "\\" + file, 'rb')
         myPDF = PdfFileReader(inputFile, strict=False)
-        
         # merge PDF-files
         pdfMerger.append(myPDF)
-        
     # produce output PDF
-    outputFile = '.\\dummyfile'
+    outputFile = exportFolder + '\\mergedFile.pdf'
     with open(outputFile, 'wb') as resultPDF:
         pdfMerger.write(resultPDF)    
      
@@ -126,6 +118,13 @@ def btn_GetList():
     app.clearAllListBoxes()
     items = list_files('.pdf')
     app.updateListBox("list", items)
+    
+def btn_MergePDFs():
+    '''
+    Merges selected PDFs tp one Document.
+    '''
+    pdfList = app.getListBox("list")
+    merge_PDFs(pdfList, inFolder)
 
 def btn_ClearList():
     '''
@@ -167,21 +166,29 @@ inFolder = ".\\Test files"
 app = gui(showIcon=False)
 
 # add & configure widgets
-app.addLabel("listBox1", "Files in folder:", 0, 0)
-app.addLabel("listBox2", os.path.basename(os.getcwd()) + inFolder, 0, 1)
-app.addListBox("list", [], row = 2, colspan = 2)
+row = app.getRow()
+app.addLabel("listBox1", "Files in folder:", row, 0)
+app.addLabel("listBox2", os.path.basename(os.getcwd()) + inFolder, row, 1)
+row = app.getRow()
+app.addListBox("list", [], row = row, colspan = 2)
 app.setListBoxMulti("list", multi=True)
 
 # add buttons
 # PDF list group
-app.addLabel("listBtns", "Files", row = 3, colspan = 2)
-app.addButton("Get PDFs", btn_GetList, 4, 0)
-app.addButton("Clear list", btn_ClearList, 4, 1)
+row = app.getRow()
+app.addLabel("listBtns", "Files", row = row, colspan = 2)
+row = app.getRow()
+app.addButton("Get PDFs", btn_GetList, row, 0)
+app.addButton("Merge PDFs", btn_MergePDFs, row, 1)
+row = app.getRow()
+app.addButton("Clear list", btn_ClearList, row, 0)
 
 # bookmark group
-app.addLabel("bookmarkBtns", "Bookmarks", row = 5, colspan = 2)
-app.addButton("Add page bookmarks", btn_addBookmarks, 6, 0)
-app.addButton("Delete bookmarks", btn_delBookmarks, 6, 1)
+row = app.getRow()
+app.addLabel("bookmarkBtns", "Bookmarks", row = row, colspan = 2)
+row = app.getRow()
+app.addButton("Add page bookmarks", btn_addBookmarks, row, 0)
+app.addButton("Delete bookmarks", btn_delBookmarks, row, 1)
 app.addNamedButton(name='Empty "Export-PDF"',title='PDF-Export', func=btn_delExportFolder)
 
 # start the GUI

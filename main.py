@@ -6,7 +6,7 @@ TO DOs:
     - Convert MS Office docs to PDF.
     - Clean (and shorten) the code.
 IN PROGRESS:    
-    - 
+    - Building convert_xls and convert_doc functions
 '''
 
 ############################
@@ -16,6 +16,7 @@ IN PROGRESS:
 import os
 from appJar import gui
 from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
+from win32com import client
 
 
 #############################
@@ -87,6 +88,29 @@ def del_allBookmarks(pdfList, inFolder):
         outputFile = exportFolder + "\\" + file
         with open(outputFile, 'wb') as resultPDF:
             pdfWriter.write(resultPDF)
+            
+def convert_xls(xlsList, inFolder):
+    '''
+    Function to convert xls-files to pdf format. Needs MS Excel to be installed
+    in order to work.
+    '''
+    for file in xlsList:
+        excel = client.Dispatch('Excel.Application')
+        books = excel.Workbooks.Open(inFolder + '\\' + file)
+        sheet = books.Worksheets[0]
+        sheet.ExportAsFixedFormat(0, exportFolder + '\\' + file[:len(file)-5] + '.pdf')
+        books.Close()
+        excel.Quit()
+
+#def convert_doc(docList, inFolder):
+#    # list only doc-files in folder
+#    docFiles = [file for file in docList if file.endswith('.doc')]
+#    for file in docFiles:
+#        word = client.Dispatch('Word.Application')
+#        doc = word.Documents.Open(inFolder + '\\' + file)
+#        doc.ExportAsFixedFormat(0, inFolder +  '\\' + file[:len(file)-5] + '.pdf')
+#        doc.Close()
+#        word.Quit()
     
 def merge_PDFs(pdfList, inFolder):
     '''

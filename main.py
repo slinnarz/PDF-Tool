@@ -96,7 +96,7 @@ def convert_xls(xlsList, inFolder):
     '''
     for file in xlsList:
         excel = client.Dispatch('Excel.Application')
-        books = excel.Workbooks.Open(inFolder + '\\' + file)
+        books = excel.Workbooks.Open(wd + '\\' + 'Test files' + '\\' + file)
         sheet = books.Worksheets[0]
         sheet.ExportAsFixedFormat(0, exportFolder + '\\' + file[:len(file)-5] + '.pdf')
         books.Close()
@@ -135,7 +135,7 @@ def merge_PDFs(pdfList, inFolder):
      
 ### APP FUNCTIONS
 
-def btn_GetList():
+def btn_GetPDFList():
     '''
     Create button to get a list of all PDF-Files.
     '''
@@ -175,10 +175,28 @@ def btn_delBookmarks():
     '''
     pdfList = app.getListBox("list")
     del_allBookmarks(pdfList, inFolder)
+    
+def btn_convertXlsx():
+    '''
+    Create button to convert xls(x) files to PDF.
+    '''
+    xlsList = app.getListBox("list")
+    convert_xls(xlsList, inFolder)
+    
+def btn_GetXlsList():
+    '''
+    Create button to get list of all xls files in folder.
+    '''
+    app.clearAllListBoxes()
+    items = list_files('.xlsx')
+    app.updateListBox("list", items)
 
 #########################
 ##### START PROGRAM #####
 #########################
+
+# get cwd, needed for office file conversion
+wd = os.getcwd()
 
 # set subfolder to store/edit new PDF files
 exportFolder = ".\\PDF-Export"
@@ -200,12 +218,19 @@ app.setListBoxMulti("list", multi=True)
 # add buttons
 # PDF list group
 row = app.getRow()
-app.addLabel("listBtns", "Files", row = row, colspan = 2)
+app.addLabel("listBtns", "PDF files", row = row, colspan = 2)
 row = app.getRow()
-app.addButton("Get PDFs", btn_GetList, row, 0)
+app.addButton("Get PDFs", btn_GetPDFList, row, 0)
 app.addButton("Merge PDFs", btn_MergePDFs, row, 1)
 row = app.getRow()
 app.addButton("Clear list", btn_ClearList, row, 0)
+
+# MS Office group
+row = app.getRow()
+app.addLabel("xlsBtns", "MS Office Files", row = row, colspan = 2)
+row = app.getRow()
+app.addButton("Get xls", btn_GetXlsList, row, 0)
+app.addButton("Convert to PDF", btn_convertXlsx, row, 1)
 
 # bookmark group
 row = app.getRow()
